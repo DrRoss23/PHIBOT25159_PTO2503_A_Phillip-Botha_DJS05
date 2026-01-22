@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/UI/Header";
+import Home from "./pages/Home";
+import ShowDetail from "./pages/ShowDetail";
+import { PodcastProvider } from "./context/PodcastContext";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+/**
+ * Root component of the Podcast Explorer app.
+ *
+ * - Wraps the application in the `PodcastProvider` context for global state.
+ * - Includes the `Header` component, displayed on all pages.
+ * - Defines client-side routes using React Router:
+ *    - "/" renders the `Home` page
+ *    - "/show/:id" renders the `ShowDetail` page for a specific podcast
+ *
+ * @returns {JSX.Element} The application component with routing and context.
+ */
+export default function App() {
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Header />
+      <PodcastProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path={`/show/:id`} element={<ShowDetail />} />
+        </Routes>
+      </PodcastProvider>
     </>
-  )
+  );
 }
-
-export default App
