@@ -1,39 +1,33 @@
 import PodcastCard from "./PodcastCard";
-import { PodcastContext } from "../context/PodcastContext";
+import { usePodcastContext } from "../../context/PodcastContext";
 import styles from "./PodcastGrid.module.css";
-import { useContext } from "react";
 
 /**
- * PodcastGrid Component
+ * PodcastGrid component.
  *
- * Renders a responsive grid of podcast preview cards using filtered and paginated
- * podcast data from context. Each card displays a podcast’s metadata including
- * title, image, genres, season count, and last updated date.
+ * Renders a responsive grid of podcast preview cards using
+ * filtered podcast data from PodcastContext.
  *
- * If the filtered list is empty, it displays a user-friendly "no results" message.
+ * Displays a user-friendly message when no results are available.
  *
- * @component
- * @param {Object} props - Component props
- * @param {{id: number, name: string}[]} props.genres - Array of genre definitions used to resolve genre IDs in each podcast
- *
- * @returns {JSX.Element} A grid of <PodcastCard> components or a message if no results are found
+ * @returns {JSX.Element} Grid of PodcastCard components
  */
-export default function PodcastGrid({ genres }) {
-  const { podcasts } = useContext(PodcastContext);
-  if (!podcasts.length) {
+export default function PodcastGrid() {
+  const { filteredPodcasts } = usePodcastContext();
+
+  if (!filteredPodcasts.length) {
     return (
       <p className={styles.noResults}>
         No podcasts match your search or filters.
       </p>
     );
   }
+
   return (
-    <>
-      <div className={styles.grid}>
-        {podcasts.map((podcast) => (
-          <PodcastCard key={podcast.id} podcast={podcast} genres={genres} />
-        ))}
-      </div>
-    </>
+    <div className={styles.grid}>
+      {filteredPodcasts.map((podcast) => (
+        <PodcastCard key={podcast.id} podcast={podcast} />
+      ))}
+    </div>
   );
 }

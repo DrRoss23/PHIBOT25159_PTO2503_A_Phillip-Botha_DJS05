@@ -1,27 +1,36 @@
-import { useState, useEffect, useContext } from "react";
-import { PodcastContext } from "../context/PodcastContext";
-import styles from "./SearchBar.module.css";
+import { usePodcastContext } from "../../context/PodcastContext";
 
 /**
- * Search input with debounced update.
+ * SearchBar component.
+ *
+ * Provides a controlled text input for searching podcast titles.
+ * Updates the global search term stored in PodcastContext.
+ *
+ * @returns {JSX.Element} Search input field
  */
 export default function SearchBar() {
-  const { search, setSearch } = useContext(PodcastContext);
-  const [value, setValue] = useState(search);
+  const { searchTerm, setSearchTerm } = usePodcastContext();
 
-  // Debounce input (300ms) to avoid rapid updates.
-  useEffect(() => {
-    const id = setTimeout(() => setSearch(value), 300);
-    return () => clearTimeout(id);
-  }, [value]);
+  /**
+   * Handle changes to the search input.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} event
+   */
+  function handleChange(event) {
+    setSearchTerm(event.target.value);
+  }
 
   return (
-    <input
-      type="search"
-      placeholder="Search podcasts…"
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      className={styles.searchInput}
-    />
+    <div>
+      <label htmlFor="podcast-search">Search podcasts</label>
+
+      <input
+        id="podcast-search"
+        type="text"
+        placeholder="Search by title..."
+        value={searchTerm}
+        onChange={handleChange}
+      />
+    </div>
   );
 }

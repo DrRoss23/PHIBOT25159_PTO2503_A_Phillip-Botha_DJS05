@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import GenreTags from "../components/UI/GenreTags";
 
 /**
  * ShowDetail page component.
  *
  * - Fetches detailed data for a single podcast show using a UUID
- * - Displays show metadata (title, image, description, last updated)
- * - Provides season navigation via a dropdown selector
- * - Prepares the structure for episode rendering (DJS05)
+ * - Displays show metadata (title, image, description, genres, last updated)
+ * - Provides season navigation
+ * - Renders episode lists for the selected season
  *
  * @returns {JSX.Element} Show detail page
  */
@@ -15,16 +16,9 @@ export default function ShowDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  /** Full show object returned by the API */
   const [show, setShow] = useState(null);
-
-  /** Currently selected season index */
   const [selectedSeasonIndex, setSelectedSeasonIndex] = useState(0);
-
-  /** Loading state while fetching show data */
   const [isLoading, setIsLoading] = useState(true);
-
-  /** Error message if fetching fails */
   const [error, setError] = useState(null);
 
   /**
@@ -46,7 +40,7 @@ export default function ShowDetail() {
 
         const data = await response.json();
         setShow(data);
-        setSelectedSeasonIndex(0); // Reset season on new show
+        setSelectedSeasonIndex(0);
       } catch (err) {
         setError(err.message);
         setShow(null);
@@ -70,6 +64,18 @@ export default function ShowDetail() {
       month: "long",
       day: "numeric",
     });
+  }
+
+  /**
+   * Shorten long episode descriptions for preview display.
+   *
+   * @param {string} text
+   * @param {number} maxLength
+   * @returns {string}
+   */
+  function shortenText(text, maxLength = 160) {
+    if (!text) return "";
+    return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
   }
 
   // --------------------
@@ -104,6 +110,9 @@ export default function ShowDetail() {
 
       <img src={show.image} alt={show.title} style={{ maxWidth: "300px" }} />
 
+      {/* ✅ Genre tags – single source of truth */}
+      <GenreTags genreIds={show.genres} />
+
       <p>{show.description}</p>
 
       <p>
@@ -125,7 +134,7 @@ export default function ShowDetail() {
             }
           >
             {seasons.map((season, index) => (
-              <option key={season.id} value={index}>
+              <option key={`${show.id}-season-${index}`} value={index}>
                 {season.title} ({season.episodes.length} episodes)
               </option>
             ))}
@@ -133,14 +142,38 @@ export default function ShowDetail() {
         </div>
       )}
 
-      {/* Placeholder for episode list (next step) */}
+      {/* Episode List */}
       {selectedSeason && (
-        <p>
-          <strong>
-            {selectedSeason.title} contains {selectedSeason.episodes.length}{" "}
-            episodes.
-          </strong>
-        </p>
+        <div>
+          <h3>{selectedSeason.title}</h3>
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {selectedSeason.episodes.map((episode, index) => (
+              <li
+                key={`${show.id}-episode-${selectedSeasonIndex}-${index}`}
+                style={{
+                  marginBottom: "1.5rem",
+                  borderBottom: "1px solid #444",
+                  paddingBottom: "1rem",
+                }}
+              >
+                <h4>
+                  Episode {index + 1}: {episode.title}
+                </h4>
+
+                {episode.image && (
+                  <img
+                    src={episode.image}
+                    alt={episode.title}
+                    style={{ maxWidth: "200px" }}
+                  />
+                )}
+
+                <p>{shortenText(episode.description)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

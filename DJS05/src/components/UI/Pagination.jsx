@@ -1,18 +1,26 @@
-import { useContext } from "react";
-import { PodcastContext } from "../context/PodcastContext";
 import styles from "./Pagination.module.css";
 
 /**
- * Numeric pagination bar.
+ * Pagination component.
+ *
+ * Renders a numeric pagination control.
+ * This component is presentational only and expects
+ * pagination state to be passed in as props.
+ *
+ * Pagination logic is not yet implemented in the app,
+ * so this component is currently safe and dormant.
+ *
+ * @param {Object} props
+ * @param {number} props.page - Current active page
+ * @param {number} props.totalPages - Total number of pages
+ * @param {(page: number) => void} props.onPageChange - Page change handler
+ * @returns {JSX.Element|null} Pagination controls or null
  */
-export default function Pagination() {
-  const { page, setPage, totalPages } = useContext(PodcastContext);
+export default function Pagination({ page, totalPages, onPageChange }) {
+  if (!totalPages || totalPages <= 1) {
+    return null;
+  }
 
-  if (totalPages <= 1) return null;
-
-  /**
-   * Build page list.
-   */
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
@@ -21,7 +29,7 @@ export default function Pagination() {
         <button
           key={p}
           className={`${styles.pageButton} ${p === page ? styles.active : ""}`}
-          onClick={() => setPage(p)}
+          onClick={() => onPageChange(p)}
         >
           {p}
         </button>
