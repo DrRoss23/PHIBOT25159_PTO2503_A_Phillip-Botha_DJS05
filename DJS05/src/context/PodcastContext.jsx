@@ -1,139 +1,163 @@
-import React, { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 /**
- * @typedef Podcast
- * @property {number} id - Unique identifier
- * @property {string} title - Podcast title
- * @property {string} updated - Last updated ISO date string
- * @property {number[]} genres - Array of genre IDs
- * @property {string} image - URL to podcast artwork
- * @property {number} seasons - Number of seasons
- */
-/**
- * Sorting options available to the user for viewing podcasts.
- * @type {{key: string, label: string}[]}
- */
-export const SORT_OPTIONS = [
-  { key: "default", label: "Default" },
-  { key: "date-desc", label: "Newest" },
-  { key: "date-asc", label: "Oldest" },
-  { key: "title-asc", label: "Title A → Z" },
-  { key: "title-desc", label: "Title Z → A" },
-];
-
-/**
- * React context for sharing podcast state across components.
- * Must be used within a <PodcastProvider>.
- */
-export const PodcastContext = createContext();
-
-/**
- * PodcastProvider component wraps children in a context with state for
- * searching, sorting, filtering, and paginating podcast data.
+ * PodcastContext
  *
- * @param {{children: React.ReactNode, initialPodcasts: Podcast[]}} props
- * @returns {JSX.Element}
+ * Provides global state for podcast data, filters, search, sorting,
+ * and pagination. This context is used across the app to ensure that
+ * state is preserved when navigating between pages (e.g. Home → Show Detail → Home).
  */
-export function PodcastProvider({ children, initialPodcasts }) {
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState("date-desc");
-  const [genre, setGenre] = useState("all");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+const PodcastContext = createContext(null);
+
+/**
+ * PodcastProvider component.
+ *
+ * - Fetches the list of podcast previews from the API
+ * - Stores the original dataset separately from filtered results
+ * - Applies search, filter, and sort logic safely
+ * - Exposes state and setters to the rest of the app
+ *
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - Child components
+ * @returns {JSX.Element} Context provider wrapper
+ */
+export function PodcastProvider({ children }) {
+  /** Original unmodified podcast list from the API */
+  const [initialPodcasts, setInitialPodcasts] = useState([]);
+
+  /** Podcasts after filters, search, and sorting */
+  const [filteredPodcasts, setFilteredPodcasts] = useState([]);
+
+  /** Search query string */
+  const [searchTerm, setSearchTerm] = useState("");
+
+  /** Selected genre ID (null = all genres) */
+  const [selectedGenre, setSelectedGenre] = useState(null);
+
+  /** Sort option (e.g. "title", "updated") */
+  const [sortOption, setSortOption] = useState("");
+
+  /** Loading state for data fetch */
+  const [isLoading, setIsLoading] = useState(false);
+
+  /** Error message if fetch fails */
+  const [error, setError] = useState(null);
 
   /**
-   * Dynamically calculate how many cards can fit on screen.
-   * Sets a fixed 10 cards for tablet and smaller screens.
+   * Fetch podcast preview data on initial app load.
    */
   useEffect(() => {
-    const calculatePageSize = () => {
-      const screenW = window.innerWidth;
+    async function fetchPodcasts() {
+      setIsLoading(true);
+      setError(null);
 
-      // Tablet and smaller (≤ 1024px): always show 10 cards
-      if (screenW <= 1024) {
-        setPageSize(10);
-        return;
+      try {
+        const response = await fetch("https://podcast-api.netlify.app");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch podcasts");
+        }
+
+        const data = await response.json();
+
+        // Ensure data is always an array
+        const safeData = Array.isArray(data) ? data : [];
+
+        setInitialPodcasts(safeData);
+        setFilteredPodcasts(safeData);
+      } catch (err) {
+        setError(err.message);
+        setInitialPodcasts([]);
+        setFilteredPodcasts([]);
+      } finally {
+        setIsLoading(false);
       }
+    }
 
-      // For larger screens, calculate based on available width and 2 rows
-      const cardWidth = 260;
-      const maxRows = 2;
-      const columns = Math.floor(screenW / cardWidth);
-      const pageSize = columns * maxRows;
-
-      setPageSize(pageSize);
-    };
-
-    calculatePageSize();
-    window.addEventListener("resize", calculatePageSize);
-    return () => window.removeEventListener("resize", calculatePageSize);
+    fetchPodcasts();
   }, []);
 
   /**
-   * Applies the current search query, genre filter, and sort key
-   * to the list of podcasts.
-   * @returns {Podcast[]} Filtered and sorted podcasts
+   * Apply search, filter, and sort logic whenever
+   * relevant state changes.
    */
-  const applyFilters = () => {
-    let data = [...initialPodcasts];
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      data = data.filter((p) => p.title.toLowerCase().includes(q));
-    }
-
-    if (genre !== "all") {
-      data = data.filter((p) => p.genres.includes(Number(genre)));
-    }
-
-    switch (sortKey) {
-      case "title-asc":
-        data.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case "title-desc":
-        data.sort((a, b) => b.title.localeCompare(a.title));
-        break;
-      case "date-asc":
-        data.sort((a, b) => new Date(a.updated) - new Date(b.updated));
-        break;
-      case "date-desc":
-        data.sort((a, b) => new Date(b.updated) - new Date(a.updated));
-        break;
-      case "default":
-      default:
-        break;
-    }
-
-    return data;
-  };
-  /** @type {Podcast[]} */
-  const filtered = applyFilters();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   useEffect(() => {
-    setPage(1);
-  }, [search, sortKey, genre]);
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, selectedGenre, sortOption, initialPodcasts]);
 
+  /**
+   * Applies search, genre filtering, and sorting to the podcast list.
+   * This function is fully defensive and will never crash the app.
+   */
+  function applyFilters() {
+    // Guard: if data is not ready yet, exit safely
+    if (!Array.isArray(initialPodcasts) || initialPodcasts.length === 0) {
+      setFilteredPodcasts([]);
+      return;
+    }
+
+    let results = [...initialPodcasts];
+
+    // Search filter (title match)
+    if (searchTerm.trim() !== "") {
+      const lowerSearch = searchTerm.toLowerCase();
+      results = results.filter((podcast) =>
+        podcast.title.toLowerCase().includes(lowerSearch),
+      );
+    }
+
+    // Genre filter
+    if (selectedGenre !== null) {
+      results = results.filter((podcast) =>
+        podcast.genres?.includes(selectedGenre),
+      );
+    }
+
+    // Sorting
+    if (sortOption === "title") {
+      results.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    if (sortOption === "updated") {
+      results.sort((a, b) => new Date(b.updated) - new Date(a.updated));
+    }
+
+    setFilteredPodcasts(results);
+  }
+
+  /**
+   * Values exposed to consumers of the PodcastContext.
+   */
   const value = {
-    search,
-    setSearch,
-    sortKey,
-    setSortKey,
-    genre,
-    setGenre,
-    page: currentPage,
-    setPage,
-    totalPages,
-    podcasts: paged,
-    allPodcastsCount: filtered.length,
+    initialPodcasts,
+    filteredPodcasts,
+    searchTerm,
+    setSearchTerm,
+    selectedGenre,
+    setSelectedGenre,
+    sortOption,
+    setSortOption,
+    isLoading,
+    error,
   };
 
   return (
     <PodcastContext.Provider value={value}>{children}</PodcastContext.Provider>
   );
+}
+
+/**
+ * Custom hook for accessing PodcastContext.
+ *
+ * @returns {Object} Podcast context value
+ */
+export function usePodcastContext() {
+  const context = useContext(PodcastContext);
+
+  if (!context) {
+    throw new Error("usePodcastContext must be used within a PodcastProvider");
+  }
+
+  return context;
 }
