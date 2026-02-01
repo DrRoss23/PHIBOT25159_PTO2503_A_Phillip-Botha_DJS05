@@ -1,16 +1,12 @@
 /**
- * @function formatDate
- * Converts an ISO date string into a human-readable, localized date string.
- * Example output: "July 7, 2025".
+ * formatDate
+ * ----------
+ * Converts a numeric timestamp into a
+ * human-readable date string.
  *
- * @param {string} isoString - A valid ISO 8601 date string (e.g., "2025-07-07T12:34:56Z").
- * @returns {string} Formatted date string in the user's local language and format.
- **/
-export function formatDate(isoString) {
-  const date = new Date(isoString);
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+ * @param {number} timestamp - Unix timestamp in milliseconds
+ * @returns {string} Formatted date string
+ */
+export function formatDate(timestamp) {
+  return new Date(timestamp).toLocaleDateString();
 }
