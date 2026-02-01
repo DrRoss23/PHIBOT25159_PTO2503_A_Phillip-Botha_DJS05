@@ -2,73 +2,50 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 /**
  * PodcastContext
+ * --------------
+ * Provides global podcast data and UI state such as:
+ * - Podcast list
+ * - Search query
+ * - Genre filter
+ * - Loading and error states
  *
- * Provides global state for podcast data, filters, search, sorting,
- * and pagination. This context is used across the app to ensure that
- * state is preserved when navigating between pages (e.g. Home → Show Detail → Home).
+ * This context ensures that filters and search state
+ * persist when navigating between routes.
  */
-const PodcastContext = createContext(null);
+const PodcastContext = createContext();
 
 /**
- * PodcastProvider component.
+ * PodcastProvider
+ * ----------------
+ * Wraps the application and provides podcast-related state
+ * to all child components.
  *
- * - Fetches the list of podcast previews from the API
- * - Stores the original dataset separately from filtered results
- * - Applies search, filter, and sort logic safely
- * - Exposes state and setters to the rest of the app
- *
- * @param {Object} props
- * @param {React.ReactNode} props.children - Child components
- * @returns {JSX.Element} Context provider wrapper
+ * @param {{ children: React.ReactNode }} props
+ * @returns {JSX.Element}
  */
 export function PodcastProvider({ children }) {
-  /** Original unmodified podcast list from the API */
-  const [initialPodcasts, setInitialPodcasts] = useState([]);
-
-  /** Podcasts after filters, search, and sorting */
-  const [filteredPodcasts, setFilteredPodcasts] = useState([]);
-
-  /** Search query string */
-  const [searchTerm, setSearchTerm] = useState("");
-
-  /** Selected genre ID (null = all genres) */
-  const [selectedGenre, setSelectedGenre] = useState(null);
-
-  /** Sort option (e.g. "title", "updated") */
-  const [sortOption, setSortOption] = useState("");
-
-  /** Loading state for data fetch */
-  const [isLoading, setIsLoading] = useState(false);
-
-  /** Error message if fetch fails */
+  const [podcasts, setPodcasts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   /**
-   * Fetch podcast preview data on initial app load.
+   * Fetch all podcasts from the API
    */
   useEffect(() => {
     async function fetchPodcasts() {
-      setIsLoading(true);
-      setError(null);
-
       try {
-        const response = await fetch("https://podcast-api.netlify.app");
+        const response = await fetch("https://podcast-api.netlify.app/shows");
 
         if (!response.ok) {
           throw new Error("Failed to fetch podcasts");
         }
 
         const data = await response.json();
-
-        // Ensure data is always an array
-        const safeData = Array.isArray(data) ? data : [];
-
-        setInitialPodcasts(safeData);
-        setFilteredPodcasts(safeData);
+        setPodcasts(data);
       } catch (err) {
         setError(err.message);
-        setInitialPodcasts([]);
-        setFilteredPodcasts([]);
       } finally {
         setIsLoading(false);
       }
@@ -78,79 +55,45 @@ export function PodcastProvider({ children }) {
   }, []);
 
   /**
-   * Apply search, filter, and sort logic whenever
-   * relevant state changes.
+   * Filter podcasts based on search query and genre
+   *
+   * @returns {Array} Filtered podcast list
    */
-  useEffect(() => {
-    applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedGenre, sortOption, initialPodcasts]);
+  const filteredPodcasts = podcasts.filter((podcast) => {
+    const matchesSearch = podcast.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
-  /**
-   * Applies search, genre filtering, and sorting to the podcast list.
-   * This function is fully defensive and will never crash the app.
-   */
-  function applyFilters() {
-    // Guard: if data is not ready yet, exit safely
-    if (!Array.isArray(initialPodcasts) || initialPodcasts.length === 0) {
-      setFilteredPodcasts([]);
-      return;
-    }
+    const matchesGenre =
+      selectedGenre === "all" || podcast.genres.includes(Number(selectedGenre));
 
-    let results = [...initialPodcasts];
-
-    // Search filter (title match)
-    if (searchTerm.trim() !== "") {
-      const lowerSearch = searchTerm.toLowerCase();
-      results = results.filter((podcast) =>
-        podcast.title.toLowerCase().includes(lowerSearch),
-      );
-    }
-
-    // Genre filter
-    if (selectedGenre !== null) {
-      results = results.filter((podcast) =>
-        podcast.genres?.includes(selectedGenre),
-      );
-    }
-
-    // Sorting
-    if (sortOption === "title") {
-      results.sort((a, b) => a.title.localeCompare(b.title));
-    }
-
-    if (sortOption === "updated") {
-      results.sort((a, b) => new Date(b.updated) - new Date(a.updated));
-    }
-
-    setFilteredPodcasts(results);
-  }
-
-  /**
-   * Values exposed to consumers of the PodcastContext.
-   */
-  const value = {
-    initialPodcasts,
-    filteredPodcasts,
-    searchTerm,
-    setSearchTerm,
-    selectedGenre,
-    setSelectedGenre,
-    sortOption,
-    setSortOption,
-    isLoading,
-    error,
-  };
+    return matchesSearch && matchesGenre;
+  });
 
   return (
-    <PodcastContext.Provider value={value}>{children}</PodcastContext.Provider>
+    <PodcastContext.Provider
+      value={{
+        podcasts,
+        filteredPodcasts,
+        searchQuery,
+        setSearchQuery,
+        selectedGenre,
+        setSelectedGenre,
+        isLoading,
+        error,
+      }}
+    >
+      {children}
+    </PodcastContext.Provider>
   );
 }
 
 /**
- * Custom hook for accessing PodcastContext.
+ * usePodcastContext
+ * -----------------
+ * Custom hook to access the PodcastContext safely.
  *
- * @returns {Object} Podcast context value
+ * @returns {Object} Podcast context values
  */
 export function usePodcastContext() {
   const context = useContext(PodcastContext);
