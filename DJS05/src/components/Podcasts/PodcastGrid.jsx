@@ -1,33 +1,26 @@
 import PodcastCard from "./PodcastCard";
-import { usePodcastContext } from "../../context/PodcastContext";
 import styles from "./PodcastGrid.module.css";
 
 /**
- * PodcastGrid component.
+ * PodcastGrid
+ * -----------
+ * Layout component that renders a responsive
+ * grid of PodcastCard components.
  *
- * Renders a responsive grid of podcast preview cards using
- * filtered podcast data from PodcastContext.
- *
- * Displays a user-friendly message when no results are available.
- *
- * @returns {JSX.Element} Grid of PodcastCard components
+ * @param {{ podcasts: Array }} props
+ * @returns {JSX.Element}
  */
-export default function PodcastGrid() {
-  const { filteredPodcasts } = usePodcastContext();
-
-  if (!filteredPodcasts.length) {
-    return (
-      <p className={styles.noResults}>
-        No podcasts match your search or filters.
-      </p>
-    );
-  }
-
+export default function PodcastGrid({ podcasts }) {
   return (
-    <div className={styles.grid}>
-      {filteredPodcasts.map((podcast) => (
-        <PodcastCard key={podcast.id} podcast={podcast} />
+    <ul className={styles.grid}>
+      {podcasts.map((podcast) => (
+        <PodcastCard
+          key={podcast.id}
+          id={podcast.id}
+          title={podcast.title}
+          image={podcast.image}
+        />
       ))}
-    </div>
+    </ul>
   );
 }
