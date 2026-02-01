@@ -1,7 +1,16 @@
-.appHeader {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem;
-  background: white;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+.header {
+  background-color: #111;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
 }
