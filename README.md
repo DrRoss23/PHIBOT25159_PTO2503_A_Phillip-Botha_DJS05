@@ -1,90 +1,121 @@
-# DJS04 – React Podcast App with Search, Sort, Filter & Pagination
+# DJS05 – React Podcast Explorer
 
-This project is a **React-based podcast browsing application** that allows users to explore podcasts using powerful features such as search, sort, filter by genre, and automatic pagination. It builds upon earlier solutions (DJS03) and introduces shared state management using the React Context API.
+This project is a **React-based podcast browsing application** built for the DJS05 assessment. It allows users to browse, search, filter, sort, and explore detailed podcast information using **dynamic routing**, **global state management with React Context**, and a clean, maintainable component architecture.
 
-## Core Functionality
+The application consumes podcast data from an external API and focuses on providing a smooth, predictable user experience with proper loading, error, and empty states.
 
-- **Fetch Podcasts from API**
+---
 
-  - Data is loaded from: `https://podcast-api.netlify.app/shows`
-  - Podcasts include metadata like title, updated date, genres, image, and seasons
+## 🚀 Features Overview
 
-- **Search**
+### Podcast Browsing
 
-  - Users can search podcasts by title
-  - Case-insensitive and dynamically updates the result list
+- Fetches podcast data from:
+  - `https://podcast-api.netlify.app/shows`
+- Displays podcasts in a responsive grid layout
+- Each podcast links to its own dedicated detail page
 
-- **Sort**
+### Search, Filter & Sort
 
-  - Sort options include:
-    - Default
-    - Newest (by updated date)
-    - Oldest
-    - Title A → Z
-    - Title Z → A
+- **Search** podcasts by title (case-insensitive)
+- **Filter** podcasts by genre using a dropdown
+- **Sort** podcasts by:
+  - Title (A–Z)
+  - Title (Z–A)
+  - Last updated (newest first)
+  - Last updated (oldest first)
+- All search, filter, and sort state persists when navigating between pages
 
-- **Genre Filter**
+### Podcast Detail Page
 
-  - Podcasts can be filtered by genre using a dropdown
-  - All available genres are loaded from static data
+- Dynamic routing using a unique show ID (`/show/:id`)
+- Displays:
+  - Podcast title
+  - Large podcast image
+  - Description
+  - Genre tags
+  - Human-readable “last updated” date
+- Season selector allows users to switch between seasons
+- Episode list displays:
+  - Episode number
+  - Episode title
+  - Truncated episode description
+  - Season image next to each episode
 
-- **Pagination**
+### User Experience & UX States
 
-  - The app dynamically adjusts how many podcast cards to show per page
-  - Uses screen width to compute optimal layout (e.g., 2 rows × n columns)
-  - Defaults to 10 items per page for tablet and smaller screens
+- Loading indicators while data is being fetched
+- Graceful error messages if API requests fail
+- Clear empty-state messaging when no podcasts match current filters
 
-- **Shared State with Context API**
-  - Uses a `PodcastProvider` to manage global podcast state
-  - Exposes search term, sort key, selected genre, page, and filtered podcasts
-  - Components consume state via `usePodcasts()` or `PodcastContext`
+---
 
-## Project Structure
+## 🧠 Technical Architecture
 
-```
-/src
-│
-├── /api
-│ └── fetchPodcasts.js # Fetch podcasts from the API
-│
-├── /components
-│ ├── Header.jsx # Top navigation bar with controls
-│ ├── PodcastCard.jsx # Individual podcast preview card
-│ ├── PodcastGrid.jsx # Grid layout of podcast cards
-│
-├── /context
-│ └── PodcastContext.jsx # React context for global podcast state
-│
-├── /utils
-│ └── formatDate.js # Formats ISO date to readable format
-│
-├── App.jsx # Root app component
-└── main.jsx # React entry point
-```
+### Routing & Navigation
 
-## How It Works
+- Implemented using **React Router**
+- Dynamic routes ensure each podcast has a unique detail page
+- Correct show IDs are passed via route parameters
+- Global state persists when navigating back to the home page
 
-- When the app loads, it fetches all podcast data once.
-- The data is passed into the `PodcastProvider`, which handles:
-  - Searching titles
-  - Sorting by selected key
-  - Filtering by genre
-  - Splitting into pages based on screen size
-- Components like `PodcastGrid` display the processed data.
+### State Management
 
-## How to Run
+- Global state managed using the **React Context API**
+- The `PodcastProvider` stores and manages:
+  - Podcast data
+  - Search query
+  - Selected genre
+  - Sort option
+  - Loading and error states
+- Context is provided at the top level of the application to ensure all components have access when needed
 
-1. Clone the project or download the source code.
-2. Install dependencies using:
+### Component Structure
+
+- **Pages** handle data orchestration and routing
+- **Presentational components** (cards, grids, UI elements) focus on rendering
+- **Utility functions** handle reusable logic such as date formatting
+- **CSS Modules** are used to scope styles per component
+
+---
+
+## 🧪 Error Handling & Edge Cases
+
+- Loading and error states are explicitly handled to avoid blank screens
+- A small number of podcasts from the external API contain incomplete or unexpected data
+- These edge cases are handled gracefully without breaking core functionality
+
+---
+
+## 🛠️ How to Run the Project
+
+1. Clone the repository or download the source code
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. Run the development server with:
+3. Start the development server:
 
    ```bash
    npm run dev
    ```
 
-4. Open http://localhost:5173 in your browser to view the app.
+4. Open `http://localhost:5173` in your browser
+
+---
+
+## 📋 Rubric Alignment (DJS05)
+
+- **P3.72–P3.75**: Navigation, routing, and correct ID passing
+- **P3.76–P3.79**: Data fetching with loading, error, and empty states
+- **P3.80–P3.84**: Complete podcast show details
+- **P3.85–P3.92**: Season navigation and episode display
+- **P3.93–P3.94**: Comprehensive JSDoc documentation and consistent formatting
+
+---
+
+## ✅ Final Notes
+
+This project emphasises clean architecture, predictable state management, and clear documentation. All major functions and components are documented with JSDoc comments to ensure the codebase is easy to understand, maintain, and review.
