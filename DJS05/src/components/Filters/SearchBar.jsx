@@ -1,35 +1,38 @@
 import { usePodcastContext } from "../../context/PodcastContext";
+import styles from "./SearchBar.module.css";
 
 /**
- * SearchBar component.
+ * SearchBar
+ * ---------
+ * Controlled input component used to filter podcasts
+ * by title.
  *
- * Provides a controlled text input for searching podcast titles.
- * Updates the global search term stored in PodcastContext.
+ * The search value is stored in global context so that
+ * it persists when navigating between pages.
  *
- * @returns {JSX.Element} Search input field
+ * @returns {JSX.Element}
  */
 export default function SearchBar() {
-  const { searchTerm, setSearchTerm } = usePodcastContext();
+  const { searchQuery, setSearchQuery } = usePodcastContext();
 
   /**
-   * Handle changes to the search input.
+   * Handle search input changes
    *
    * @param {React.ChangeEvent<HTMLInputElement>} event
    */
   function handleChange(event) {
-    setSearchTerm(event.target.value);
+    setSearchQuery(event.target.value);
   }
 
   return (
-    <div>
-      <label htmlFor="podcast-search">Search podcasts</label>
-
+    <div className={styles.searchBar}>
+      <label htmlFor="search">Search podcasts</label>
       <input
-        id="podcast-search"
+        id="search"
         type="text"
-        placeholder="Search by title..."
-        value={searchTerm}
+        value={searchQuery}
         onChange={handleChange}
+        placeholder="Search by title…"
       />
     </div>
   );

@@ -1,18 +1,23 @@
 import { usePodcastContext } from "../../context/PodcastContext";
+import styles from "./SortSelect.module.css";
 
 /**
- * SortSelect component.
+ * SortSelect
+ * ----------
+ * Dropdown component used to control the sorting
+ * order of podcasts displayed on the Home page.
  *
- * Provides a dropdown menu for selecting the podcast sort order.
- * Updates the global sort option stored in PodcastContext.
+ * The selected sort option is stored in global
+ * context to ensure it persists when navigating
+ * between pages.
  *
- * @returns {JSX.Element} Sort selection dropdown
+ * @returns {JSX.Element}
  */
 export default function SortSelect() {
   const { sortOption, setSortOption } = usePodcastContext();
 
   /**
-   * Handle changes to the sort selection.
+   * Handle sort option changes
    *
    * @param {React.ChangeEvent<HTMLSelectElement>} event
    */
@@ -21,13 +26,13 @@ export default function SortSelect() {
   }
 
   return (
-    <div>
-      <label htmlFor="sort-select">Sort by</label>
-
-      <select id="sort-select" value={sortOption} onChange={handleChange}>
-        <option value="">Default</option>
-        <option value="title">Title (A–Z)</option>
-        <option value="updated">Last Updated</option>
+    <div className={styles.sortSelect}>
+      <label htmlFor="sort">Sort by</label>
+      <select id="sort" value={sortOption} onChange={handleChange}>
+        <option value="title-asc">Title (A–Z)</option>
+        <option value="title-desc">Title (Z–A)</option>
+        <option value="updated-desc">Last updated (newest)</option>
+        <option value="updated-asc">Last updated (oldest)</option>
       </select>
     </div>
   );
